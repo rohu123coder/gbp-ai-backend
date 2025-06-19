@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 exports.googleAuth = (req, res) => {
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.***REMOVED***}&redirect_uri=${process.env.REDIRECT_URI}&response_type=code&scope=https://www.googleapis.com/auth/business.manage&access_type=offline&prompt=consent`;
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.REDIRECT_URI}&response_type=code&scope=https://www.googleapis.com/auth/business.manage&access_type=offline&prompt=consent`;
   res.redirect(url);
 };
 
@@ -11,8 +11,8 @@ exports.googleCallback = async (req, res) => {
   try {
     const { data } = await axios.post('https://oauth2.googleapis.com/token', {
       code,
-      client_id: process.env.***REMOVED***,
-      client_secret: process.env.***REMOVED***,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
       redirect_uri: process.env.REDIRECT_URI,
       grant_type: 'authorization_code',
     });
