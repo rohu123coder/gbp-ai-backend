@@ -4,8 +4,9 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const passport = require('./controllers/passport'); // Make sure this exports passport setup
+const passport = require('./controllers/passport'); // Passport setup
 const authRoutes = require('./routes/auth');
+const gbpRoutes = require('./routes/gbp'); // GBP routes
 
 const app = express();
 
@@ -35,7 +36,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// IMPORTANT: Session ke baad passport initialize karo
+// Session ke baad passport
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -46,6 +47,9 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// GBP (Google Business Profile) routes
+app.use('/api/gbp', gbpRoutes);
 
 // Root test route
 app.get('/', (req, res) => {
