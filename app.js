@@ -10,15 +10,15 @@ const gbpRoutes = require('./routes/gbp'); // GBP routes
 
 const app = express();
 
-// 👇 Update: ONLY those frontend origins you ACTUALLY want to allow
+// ======= FRONTEND URLS YOU ALLOW ======
 const allowedOrigins = [
-  'http://localhost:3000',                   // Local React dev
-  'https://gbp-ai-frontend.vercel.app'       // Vercel production frontend
+  'http://localhost:3000',              // Local dev
+  'https://gbp-ai-frontend.vercel.app'  // Vercel production
 ];
 
+// ======= CORS SETUP ==========
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
@@ -30,37 +30,37 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// ======= SESSION SETUP ========
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    sameSite: 'none',   // IMPORTANT for cross-domain (Vercel <-> Render)
-    secure: true        // IMPORTANT for HTTPS (production)
+    sameSite: 'none',   // For cross-domain (Vercel <-> Render)
+    secure: true        // For HTTPS (LIVE deploy only)
+    // local testing? Use: sameSite: 'lax', secure: false
   }
 }));
 
-
-// Session ke baad passport
+// ======= PASSPORT SETUP ========
 app.use(passport.initialize());
 app.use(passport.session());
 
-// MongoDB Connect
+// ======= MONGODB CONNECT =======
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch((err) => console.log('MongoDB Connection Error:', err));
 
-// Auth routes
-app.use('/api/auth', authRoutes);
+// ======= ROUTES =======
+app.use('/api/auth', authRoutes); // Google OAuth etc.
+app.use('/api/gbp', gbpRoutes);   // GBP APIs
 
-// GBP (Google Business Profile) routes
-app.use('/api/gbp', gbpRoutes);
-
-// Root test route
+// ======= HEALTH CHECK =======
 app.get('/', (req, res) => {
   res.json({ message: 'Hello from GBP AI Backend!' });
 });
 
-// Start server
+// ======= START SERVER =======
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend running on ${PORT}`));

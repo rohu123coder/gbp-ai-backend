@@ -1,3 +1,4 @@
+// routes/auth.js
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
@@ -24,5 +25,24 @@ router.get('/google/callback', passport.authenticate('google', {
   res.redirect(redirectUrl);
 });
 
-module.exports = router;
+// ⭐⭐ NEW: Add this route for login status check
+router.get('/check', (req, res) => {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    res.json({ loggedIn: true, user: req.user });
+  } else {
+    res.json({ loggedIn: false });
+  }
+});
 
+// ⭐⭐ (OPTIONAL) Logout route
+router.get('/logout', (req, res) => {
+  req.logout(() => {
+    res.redirect(
+      process.env.NODE_ENV === 'production'
+        ? 'https://gbp-ai-frontend.vercel.app/'
+        : 'http://localhost:3000/'
+    );
+  });
+});
+
+module.exports = router;
