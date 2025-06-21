@@ -13,7 +13,6 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',                   // Local React dev
   'https://gbp-ai-frontend.vercel.app'       // Vercel production frontend
-  // REMOVE 'https://localspark.clickfox.in' unless you use it!
 ];
 
 app.use(cors({
