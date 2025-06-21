@@ -4,7 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const passport = require('./passport'); // Make sure this exports passport setup
+const passport = require('./controllers/passport'); // Make sure this exports passport setup
 const authRoutes = require('./routes/auth');
 
 const app = express();
