@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const gbpRoutes = require('./routes/gbp'); // GBP routes
 
 const app = express();
+app.set('trust proxy', 1);
 
 // ======= FRONTEND URLS YOU ALLOW ======
 const allowedOrigins = [
