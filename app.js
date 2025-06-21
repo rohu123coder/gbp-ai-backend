@@ -33,8 +33,13 @@ app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: {
+    sameSite: 'none',   // IMPORTANT for cross-domain (Vercel <-> Render)
+    secure: true        // IMPORTANT for HTTPS (production)
+  }
 }));
+
 
 // Session ke baad passport
 app.use(passport.initialize());
