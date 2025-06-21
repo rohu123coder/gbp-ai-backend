@@ -1,5 +1,5 @@
 // passport.js
-const passport = require('passport');
+const passport = require('./controllers/passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 // Configure your Google OAuth strategy here
