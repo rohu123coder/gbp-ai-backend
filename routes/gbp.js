@@ -1,9 +1,9 @@
-// routes/gbp.js
 const express = require('express');
 const router = express.Router();
 const gbpController = require('../controllers/gbpController');
+const auth = require('../middleware/auth'); // This must decode JWT and attach jwtUser to req
 
-// GBP locations list
-router.get('/locations', gbpController.getLocations);
+// Secure route to fetch GBP locations
+router.get('/locations', auth, gbpController.getLocations);
 
 module.exports = router;

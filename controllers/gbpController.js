@@ -1,22 +1,42 @@
 // controllers/gbpController.js
 const axios = require('axios');
-const getAccessToken = require('../utils/getAccessToken'); // <-- Correct import
 
 exports.getLocations = async (req, res) => {
-  const accessToken = getAccessToken(req);
-  if (!accessToken) return res.status(401).json({ message: "Not logged in!" });
+  const accessToken = req.jwtUser?.access_token;
+
+  if (!accessToken) {
+    return res.status(401).json({ message: "Unauthorized – Please login first." });
+  }
 
   try {
-    // Google Business Profile API endpoint for locations (accounts)
-    const { data } = await axios.get(
+    // Step 1: Get list of accounts
+    const { data: accountsData } = await axios.get(
       'https://mybusinessbusinessinformation.googleapis.com/v1/accounts',
       {
         headers: { Authorization: `Bearer ${accessToken}` }
       }
     );
-    res.json(data); // You can shape/filter the response as needed
+
+    // Step 2: Get locations for the first account found (you can loop if needed)
+    const accountName = accountsData.accounts?.[0]?.name;
+
+    if (!accountName) {
+      return res.status(404).json({ message: "No account found for this user." });
+    }
+
+    const { data: locationsData } = await axios.get(
+      `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }
+    );
+
+    res.json(locationsData);
   } catch (err) {
-    console.error("GBP API Error:", err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    console.error("Error fetching GBP data:", err.response?.data || err.message);
+    res.status(500).json({
+      error: err.response?.data?.error || err.message,
+      message: "Failed to fetch GBP account or locations."
+    });
   }
 };

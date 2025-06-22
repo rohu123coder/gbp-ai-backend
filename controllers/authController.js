@@ -1,6 +1,7 @@
 // controllers/authController.js
 const axios = require('axios');
 const qs = require('querystring');
+const jwt = require('jsonwebtoken');
 
 // 1. Start Google OAuth (redirect user to Google consent screen)
 exports.googleAuth = (req, res) => {
@@ -12,18 +13,11 @@ exports.googleAuth = (req, res) => {
 
 // 2. Handle Google OAuth Callback
 exports.googleCallback = async (req, res) => {
-  console.log("==== [Google OAuth Callback] ====");
-  console.log("NODE_ENV:", process.env.NODE_ENV);
   const { code } = req.query;
-  console.log("Google code param:", code);
-
-  if (!code) {
-    console.error("[Google OAuth] No code found in callback!");
-    return res.status(400).json({ message: 'No code in callback' });
-  }
+  if (!code) return res.status(400).json({ message: 'No code in callback' });
 
   try {
-    // Exchange 'code' for access_token & refresh_token
+    // Exchange code for tokens
     const params = qs.stringify({
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
@@ -39,9 +33,8 @@ exports.googleCallback = async (req, res) => {
     );
 
     const { access_token, refresh_token, expires_in, id_token } = tokenRes.data;
-    console.log('[Google OAuth] Token Response:', tokenRes.data);
 
-    // Optionally, get user info (email/profile) -- useful for user DB entry
+    // Get user info from Google
     let userInfo = {};
     if (access_token) {
       const userRes = await axios.get(
@@ -49,29 +42,35 @@ exports.googleCallback = async (req, res) => {
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       userInfo = userRes.data;
-      console.log("[Google User Info]", userInfo);
     }
 
-    // 🔐 TODO: Save tokens & user info to session/db here for login persistence
-    // req.session.access_token = access_token;
-    // req.session.refresh_token = refresh_token;
-    // req.session.user = userInfo;
+    // Generate JWT with user info & Google tokens
+    const jwtToken = jwt.sign(
+      {
+        user: {
+          email: userInfo.email,
+          name: userInfo.name,
+          picture: userInfo.picture,
+        },
+        access_token,      // GBP API call ke liye
+        refresh_token
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
 
-    // Smart redirect: dev vs prod
+    // Redirect to frontend with token as query param
     const redirectUrl =
       process.env.NODE_ENV === 'production'
-        ? 'https://gbp-ai-frontend.vercel.app/dashboard'
-        : 'http://localhost:3000/dashboard';
+        ? `https://gbp-ai-frontend.vercel.app/dashboard?token=${jwtToken}`
+        : `http://localhost:3000/dashboard?token=${jwtToken}`;
 
-    console.log("[Google OAuth] Redirecting to:", redirectUrl);
     res.redirect(redirectUrl);
 
   } catch (e) {
-    console.error('[Google OAuth Error]', e.response?.data || e.message);
     res.status(500).json({
       message: 'Auth callback failed',
       error: e.response?.data || e.message,
     });
   }
 };
-
