@@ -1,5 +1,21 @@
 // controllers/gbpController.js
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
+
+// Middleware: JWT verify for GBP routes (add this to your routes/gbp.js)
+exports.authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return res.status(403).json({ message: "Invalid token" });
+      req.jwtUser = decoded; // Attach to req
+      next();
+    });
+  } else {
+    res.status(401).json({ message: "Missing or invalid token" });
+  }
+};
 
 exports.getLocations = async (req, res) => {
   const accessToken = req.jwtUser?.access_token;
